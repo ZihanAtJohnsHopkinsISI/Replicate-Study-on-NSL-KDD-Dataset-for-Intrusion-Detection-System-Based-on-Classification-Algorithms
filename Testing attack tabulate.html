@@ -1,0 +1,119 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.07 [en] (X11; I; Linux 2.0.36 i686) [Netscape]">
+   <TITLE>tabulate</TITLE>
+</HEAD>
+<BODY>
+<TT># produce the answer file for KDD contest scoring</TT>
+<BR><TT># Charles Elkan, 8/5/99</TT>
+<BR><TT></TT>&nbsp;<TT></TT>
+<P><TT>BEGIN {</TT>
+<BR><TT>FS = ",";</TT><TT></TT>
+<P><TT># testing attack types from Wenke Lee</TT><TT></TT>
+<P><TT>category["apache2."] = 2</TT>
+<BR><TT>category["back."] = 2</TT>
+<BR><TT>category["buffer_overflow."] = 3</TT>
+<BR><TT>category["ftp_write."] = 4</TT>
+<BR><TT>category["guess_passwd."] = 4</TT>
+<BR><TT>category["httptunnel."] = 4</TT>
+<BR><TT>category["httptunnel."] = 3</TT>
+<BR><TT>category["imap."] = 4</TT>
+<BR><TT>category["ipsweep."] = 1</TT>
+<BR><TT>category["land."] = 2</TT>
+<BR><TT>category["loadmodule."] = 3</TT>
+<BR><TT>category["mailbomb."] = 2</TT>
+<BR><TT>category["mscan."] = 1</TT>
+<BR><TT>category["multihop."] = 4</TT>
+<BR><TT>category["multihop."] = 3 # note that this is a duplicate</TT>
+<BR><TT>category["named."] = 4</TT>
+<BR><TT>category["neptune."] = 2</TT>
+<BR><TT>category["nmap."] = 1</TT>
+<BR><TT>category["perl."] = 3</TT>
+<BR><TT>category["phf."] = 4</TT>
+<BR><TT>category["pod."] = 2</TT>
+<BR><TT>category["portsweep."] = 1</TT>
+<BR><TT>category["processtable."] = 2</TT>
+<BR><TT>category["ps."] = 3</TT>
+<BR><TT>category["rootkit."] = 3</TT>
+<BR><TT>category["saint."] = 1</TT>
+<BR><TT>category["satan."] = 1</TT>
+<BR><TT>category["sendmail."] = 4</TT>
+<BR><TT>category["smurf."] = 2</TT>
+<BR><TT>category["snmpgetattack."] = 4</TT>
+<BR><TT>category["snmpguess."] = 4</TT>
+<BR><TT>category["sqlattack."] = 3</TT>
+<BR><TT>category["teardrop."] = 2</TT>
+<BR><TT>category["udpstorm."] = 2</TT>
+<BR><TT>category["warezmaster."] = 2</TT>
+<BR><TT>category["worm."] = 4</TT>
+<BR><TT>category["xlock."] = 4</TT>
+<BR><TT>category["xsnoop."] = 4</TT>
+<BR><TT>category["xterm."] = 3</TT><TT></TT>
+<P><TT># training attack types</TT><TT></TT>
+<P><TT>category["back."] = 2</TT>
+<BR><TT>category["buffer_overflow."] = 3</TT>
+<BR><TT>category["ftp_write."] = 4</TT>
+<BR><TT>category["guess_passwd."] = 4</TT>
+<BR><TT>category["imap."] = 4</TT>
+<BR><TT>category["ipsweep."] = 1</TT>
+<BR><TT>category["land."] = 2</TT>
+<BR><TT>category["loadmodule."] = 3</TT>
+<BR><TT>category["multihop."] = 4</TT>
+<BR><TT>category["neptune."] = 2</TT>
+<BR><TT>category["nmap."] = 1</TT>
+<BR><TT>category["perl."] = 3</TT>
+<BR><TT>category["phf."] = 4</TT>
+<BR><TT>category["pod."] = 2</TT>
+<BR><TT>category["portsweep."] = 1</TT>
+<BR><TT>category["rootkit."] = 3</TT>
+<BR><TT>category["satan."] = 1</TT>
+<BR><TT>category["smurf."] = 2</TT>
+<BR><TT>category["spy."] = 4</TT>
+<BR><TT>category["teardrop."] = 2</TT>
+<BR><TT>category["warezclient."] = 4</TT>
+<BR><TT>category["warezmaster."] = 4&nbsp; # note that this contradicts
+the category above</TT><TT></TT>
+<P><TT># initialize matrix cost[actual,predicted]</TT>
+<BR><TT># note that all other entries of the cost matrix are zero, so the
+computed</TT>
+<BR><TT># total cost is too low if either actual or predicted is ever out-of-range</TT><TT></TT>
+<P><TT>for (i = 0; i &lt;= 4; i++)</TT>
+<BR><TT>&nbsp;for (j = 0; j &lt;= 4; j++)</TT>
+<BR><TT>&nbsp; if (i == j) cost[i,j] = 0;</TT>
+<BR><TT>&nbsp; else cost[i,j] = 2;</TT><TT></TT>
+<P><TT>cost[0,1] = 1;</TT>
+<BR><TT>cost[1,0] = 1;</TT>
+<BR><TT>cost[2,1] = 1;</TT>
+<BR><TT>cost[3,0] = 3;</TT>
+<BR><TT>cost[4,0] = 4;</TT><TT></TT>
+<P><TT>total = 0</TT><TT></TT>
+<P><TT>} # end of BEGIN</TT><TT></TT>
+<P><TT>{</TT>
+<BR><TT>label = $NF;</TT><TT></TT>
+<P><TT># heuristic to identify incorrectly labeled records</TT>
+<BR><TT># if (label == "normal." &amp;&amp; $3 == "ecr_i") { disputed++;
+label = "smurf." }</TT><TT></TT>
+<P><TT>if (label == label+0) cat = label+0;&nbsp; # works for submitted
+entries</TT>
+<BR><TT>else if (label == "normal.") cat = 0;</TT>
+<BR><TT>else if (label in category) cat = category[label];</TT>
+<BR><TT>else cat = 9;</TT><TT></TT>
+<P><TT>total++</TT>
+<BR><TT>count[cat]++;</TT>
+<BR><TT>for (j = 0; j &lt;= 4; j++) basecost[j] += cost[cat,j];</TT><TT></TT>
+<P><TT>print cat;</TT>
+<BR><TT>}</TT><TT></TT>
+<P><TT>END {</TT>
+<BR><TT>print disputed, "records changed from normal to smurf";</TT><TT></TT>
+<P><TT>for (j = 0; j &lt;= 4; j++) basecost[j] /= total;</TT>
+<BR><TT>for (cat in count)</TT>
+<BR><TT>&nbsp;print cat ": " 100*count[cat]/total "%%\t base cost", basecost[cat];</TT><TT></TT>
+<P><TT>print "total", total;</TT>
+<BR><TT>}</TT>
+<BR><TT></TT>&nbsp;
+<BR><TT></TT>&nbsp;
+<BR>&nbsp;
+</BODY>
+</HTML>
